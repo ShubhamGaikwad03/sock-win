@@ -1,9 +1,7 @@
 #include <stdio.h> 
-#include <stdlib.h> 
-#include <string.h> 
-
-
-#include <winsock2.h>
+#include<stdlib.h> 
+#include<string.h> 
+#include<winsock2.h>
 
 #pragma comment(lib,"ws2_32.lib") //Winsock Library
 
@@ -11,7 +9,7 @@ const int PORT = 8080;
 
 void initWinSock()
 {
-	printf("\nInitialising Winsock...");
+	printf("\nInitialising Winsock Server");
 	WSADATA wsa;
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
 	{
@@ -24,17 +22,29 @@ void initWinSock()
 
 int main() 
 { 
-	int server_fd = 0;
+	int server_fd = 0;  // Socket descriptor
 	int new_socket = 0;
+	int valread = 0;
 	struct sockaddr_in address; 
 	int addrlen = sizeof(address); 
 	char buffer[1024] = {0}; 
 	const char *hello = "Hello from server"; 
 	
+	struct Certificate
+{
+    char name[38];
+    unsigned int hash;
+};
+
+	Certificate obj1;
+	
+	strcpy_s(obj1.name, "Congrats for course completion");
+	
+
 	initWinSock();
 
 	// Create socket descriptor 
-	if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) 
+	if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) //AF_INET-internetwork: UDP, TCP, etc.  SOCK_STREAM - TCP Protocol used
 	{ 
 		perror("socket failed"); 
 		exit(EXIT_FAILURE); 
@@ -58,16 +68,26 @@ int main()
 		exit(EXIT_FAILURE); 
 	} 
 	printf("Waiting for connection...\n");
-	if ((new_socket = accept(server_fd, (struct sockaddr *)&address, 
-								&addrlen))<0) 
-	{ 
-		perror("accept"); 
-		exit(EXIT_FAILURE); 
-	} 
+	if ((new_socket = accept(server_fd, (struct sockaddr*)&address, &addrlen)) < 0)
+	{
+		perror("accept");
+		exit(EXIT_FAILURE);
+	}
+
+
+	//send certificate
+	send(new_socket, obj1.name, strlen(obj1.name), 0);
+	
+	
+	
 	printf("Waiting for data...\n");
+
 	recv( new_socket , buffer, 1024, 0); 
-	printf("Received: %s\n",buffer ); 
+	
+	printf("Received: %s\n", buffer ); 
+	
 	send(new_socket , hello , strlen(hello) , 0 ); 
 	printf("Hello message sent\n"); 
+
 	return 0; 
 } 
